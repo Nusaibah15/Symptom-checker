@@ -1,1 +1,139 @@
 index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Symptom Tracker</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Verdana, sans-serif; }
+  body { background: #f0f4f8; color: #333; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+  .container { width: 100%; max-width: 500px; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,.08); align-self: flex-start; margin-top: 30px; }
+  h1 { font-size: 24px; color: #1e3a8a; text-align: center; margin-bottom: 8px; }
+  p.sub { text-align: center; color: #64748b; margin-bottom: 20px; font-size: 14px; }
+  h2 { font-size: 18px; margin-bottom: 12px; }
+  .input-group { display: flex; gap: 10px; margin-bottom: 25px; }
+  input[type="text"] { flex: 1; min-width: 0; padding: 12px 15px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; outline: none; }
+  input[type="text"]:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
+  button { border: none; color: #fff; cursor: pointer; border-radius: 6px; }
+  .save-btn { background: #3b82f6; padding: 12px 18px; border-radius: 8px; font-size: 15px; font-weight: 600; }
+  .save-btn:hover { background: #2563eb; }
+  ul { list-style: none; }
+  li { background: #f8fafc; padding: 12px 15px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 15px; }
+  li span { flex: 1; word-break: break-word; }
+  .edit-btn { background: #f59e0b; padding: 6px 12px; font-size: 13px; }
+  .del-btn { background: #ef4444; padding: 6px 12px; font-size: 13px; }
+  .empty, .error { text-align: center; font-size: 14px; color: #94a3b8; }
+  .error { color: #dc2626; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Symptom Tracker</h1>
+  <p class="sub">Enter a symptom and save it.</p>
+
+  <div class="input-group">
+    <input type="text" id="symptomInput" placeholder="Enter a symptom">
+    <button class="save-btn" id="saveBtn">Save</button>
+  </div>
+
+  <div id="errorBox" class="error" style="display:none"></div>
+
+  <h2>Saved Symptoms</h2>
+  <ul id="symptomList"></ul>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+  import {
+    getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, query, orderBy
+  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDhQZQrzex4mZ1JNmCp9YBluGevtPQnR5Y",
+    authDomain: "symptom-checklist.firebaseapp.com",
+    projectId: "symptom-checklist",
+    storageBucket: "symptom-checklist.firebasestorage.app",
+    messagingSenderId: "70372218409",
+    appId: "1:70372218409:web:f208770a6ab493ee2feea8"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const input = document.getElementById("symptomInput");
+  const list = document.getElementById("symptomList");
+  const errorBox = document.getElementById("errorBox");
+
+  function showError(msg) {
+    errorBox.textContent = msg;
+    errorBox.style.display = msg ? "block" : "none";
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+
+  async function loadSymptoms() {
+    try {
+      showError("");
+      const q = query(collection(db, "symptoms"), orderBy("createdAt", "desc"));
+      const snap = await getDocs(q);
+      if (snap.empty) {
+        list.innerHTML = '<p class="empty">No symptoms saved yet.</p>';
+        return;
+      }
+      list.innerHTML = snap.docs.map(d => `
+        <li data-id="${d.id}">
+          <span>${escapeHtml(d.data().symptom || "")}</span>
+          <button class="edit-btn" data-action="edit">Edit</button>
+          <button class="del-btn" data-action="delete">Delete</button>
+        </li>`).join("");
+    } catch (err) {
+      console.error(err);
+      showError("Could not load symptoms: " + err.message);
+    }
+  }
+
+  async function saveSymptom() {
+    const text = input.value.trim();
+    if (!text) { alert("Please enter a symptom"); return; }
+    try {
+      showError("");
+      await addDoc(collection(db, "symptoms"), { symptom: text, createdAt: new Date().toISOString() });
+      input.value = "";
+      await loadSymptoms();
+    } catch (err) {
+      console.error(err);
+      showError("Could not save: " + err.message);
+    }
+  }
+
+  list.addEventListener("click", async (e) => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+    const li = btn.closest("li");
+    const id = li.dataset.id;
+    try {
+      if (btn.dataset.action === "delete") {
+        await deleteDoc(doc(db, "symptoms", id));
+      } else if (btn.dataset.action === "edit") {
+        const current = li.querySelector("span").textContent;
+        const updated = prompt("Edit symptom:", current);
+        if (updated === null || updated.trim() === "") return;
+        await updateDoc(doc(db, "symptoms", id), { symptom: updated.trim() });
+      }
+      await loadSymptoms();
+    } catch (err) {
+      console.error(err);
+      showError("Action failed: " + err.message);
+    }
+  });
+
+  document.getElementById("saveBtn").addEventListener("click", saveSymptom);
+  input.addEventListener("keydown", e => { if (e.key === "Enter") saveSymptom(); });
+
+  loadSymptoms();
+</script>
+</body>
+</html>
