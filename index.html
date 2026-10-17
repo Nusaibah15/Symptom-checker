@@ -1,4 +1,4 @@
-index.html
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,24 +7,111 @@ index.html
 <title>Symptom Tracker</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Verdana, sans-serif; }
-  body { background: #f0f4f8; color: #333; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
-  .container { width: 100%; max-width: 500px; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,.08); align-self: flex-start; margin-top: 30px; }
-  h1 { font-size: 24px; color: #1e3a8a; text-align: center; margin-bottom: 8px; }
-  p.sub { text-align: center; color: #64748b; margin-bottom: 20px; font-size: 14px; }
-  h2 { font-size: 18px; margin-bottom: 12px; }
-  .input-group { display: flex; gap: 10px; margin-bottom: 25px; }
-  input[type="text"] { flex: 1; min-width: 0; padding: 12px 15px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; outline: none; }
-  input[type="text"]:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
-  button { border: none; color: #fff; cursor: pointer; border-radius: 6px; }
-  .save-btn { background: #3b82f6; padding: 12px 18px; border-radius: 8px; font-size: 15px; font-weight: 600; }
-  .save-btn:hover { background: #2563eb; }
-  ul { list-style: none; }
-  li { background: #f8fafc; padding: 12px 15px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 15px; }
-  li span { flex: 1; word-break: break-word; }
-  .edit-btn { background: #f59e0b; padding: 6px 12px; font-size: 13px; }
-  .del-btn { background: #ef4444; padding: 6px 12px; font-size: 13px; }
-  .empty, .error { text-align: center; font-size: 14px; color: #94a3b8; }
-  .error { color: #dc2626; margin-bottom: 12px; }
+
+body {
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 50%, #22c55e 100%);
+  background-attachment: fixed;
+  color: #1e293b;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.container {
+  width: 100%;
+  max-width: 500px;
+  background: #ffffff;
+  padding: 0 0 30px;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(3, 105, 161, 0.25);
+  align-self: flex-start;
+  margin-top: 30px;
+  overflow: hidden;
+}
+
+h1 {
+  font-size: 26px;
+  color: #ffffff;
+  text-align: center;
+  padding: 28px 20px 8px;
+  background: linear-gradient(135deg, #0284c7, #10b981);
+  letter-spacing: 0.5px;
+}
+h1::before { content: "🩺 "; }
+
+p.sub {
+  text-align: center;
+  color: #e0f2fe;
+  font-size: 14px;
+  padding: 0 20px 22px;
+  margin-bottom: 25px;
+  background: linear-gradient(135deg, #0284c7, #10b981);
+}
+
+.input-group, h2, ul, .error, .empty { margin-left: 25px; margin-right: 25px; }
+
+h2 {
+  font-size: 18px;
+  color: #0369a1;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 3px solid #bbf7d0;
+}
+
+.input-group { display: flex; gap: 10px; margin-bottom: 25px; }
+
+input[type="text"] {
+  flex: 1;
+  min-width: 0;
+  padding: 13px 16px;
+  border: 2px solid #bae6fd;
+  border-radius: 12px;
+  font-size: 15px;
+  outline: none;
+  background: #f0f9ff;
+  transition: all 0.2s;
+}
+input[type="text"]:focus {
+  border-color: #10b981;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+}
+
+button { border: none; color: #fff; cursor: pointer; border-radius: 10px; transition: transform 0.15s, box-shadow 0.15s; }
+button:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18); }
+button:active { transform: translateY(0); }
+
+.save-btn {
+  background: linear-gradient(135deg, #0ea5e9, #10b981);
+  padding: 13px 22px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+ul { list-style: none; }
+
+li {
+  background: linear-gradient(135deg, #f0f9ff, #f0fdf4);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+  border-left: 5px solid #10b981;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.12);
+}
+li:nth-child(even) { border-left-color: #0ea5e9; }
+li span { flex: 1; word-break: break-word; font-weight: 500; }
+
+.edit-btn { background: #0ea5e9; padding: 7px 13px; font-size: 13px; }
+.del-btn  { background: #f43f5e; padding: 7px 13px; font-size: 13px; }
+
+.empty { text-align: center; font-size: 14px; color: #64748b; padding: 20px; background: #f0fdf4; border-radius: 12px; }
+.error { text-align: center; font-size: 14px; color: #be123c; background: #ffe4e6; padding: 10px; border-radius: 10px; margin-bottom: 14px; }
 </style>
 </head>
 <body>
